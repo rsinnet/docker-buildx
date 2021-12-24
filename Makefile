@@ -10,7 +10,7 @@ help: ## Show usage information for this Makefile.
 
 .PHONY: local
 local: ## Build locally but don't push.
-	docker build --tag=$(REPO):$(VERSION)
+	docker build --tag=$(REPO):$(VERSION) .
 
 .PHONY: push
 push: ## Push the container image to the repository.

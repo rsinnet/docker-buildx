@@ -11,6 +11,8 @@
 #                 and run as the ENTRYPOINT command.
 ################
 
+hostNetwork=
+binfmtVersion=
 
 # Function which initialises `buildx`
 buildxInitialise() {
@@ -19,9 +21,6 @@ buildxInitialise() {
 
   # Name of builder being initialised
   builderName="multiarch-builder"
-
-  # Variable that pins the binfmt image version
-  binfmtVersion="latest"
 
   # Running the below command adds support for multi-arch
   # builds by setting up QEMU
@@ -34,8 +33,10 @@ buildxInitialise() {
   if [ -n "${buildxCommand}" ] ; then
     # Initialise a builder and switch to it
     printf '%s\n' "*****Initialising and bootstrapping builder "${builderName}"*****"
-    "${buildxCommand}" create --driver docker-container --driver-opt image=moby/buildkit:master,network=host \
-      --name "${builderName}" --use \
+    "${buildxCommand}" create \
+      --driver=docker-container \
+      "--driver-opt=image=moby/buildkit:master,network=${hostNetwork}" \
+      "--name=${builderName}" --use \
       && "${buildxCommand}" inspect --bootstrap
   else
     printf '%s\n' "*****The executable '${buildxCommand}' could not be found in the PATH.*****" \
@@ -100,7 +101,9 @@ main() {
   fi
 }
 
-# Calling the main function and passing all arguments to it
+# Set shell parameters to override default behavior.
+if [ -z "${hostNetwork}" ]; then hostNetwork="host"; fi
+if [ -z "${binfmtVersion}" ]; then binfmtVersion="latest"; fi
 main "$@"
 
 # End of script
