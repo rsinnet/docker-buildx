@@ -4,9 +4,13 @@
 #      DOCKERISED DOCKER SERVICE WITH BUILDX SUPPORT BUILT ON       #
 #                       TOP OF ALPINE LINUX                         #
 #-------------------------------------------------------------------#
-#                   Built and maintained by                         #
+#               Original built and maintained by                    #
 #                       Harsha Vardhan J                            #
 #               https://github.com/HarshaVardhanJ                   #
+#                                                                   #
+#               This fork built and maintained by                   #
+#                         Ryan Sinnet                               #
+#                  https://github.com/rsinnet                       #
 #####################################################################
 #                                                                   #
 # This Dockerfile does the following:                               #
@@ -24,68 +28,44 @@
 #       setting up 'buildx'.                                        #
 #                                                                   #
 # Note : This file is meant to be on GCP Cloud Build to build       #
-#        images with multiple-architecture support. If you wish to  #                        
+#        images with multiple-architecture support. If you wish to  #
 #        run the image locally, you will need to bind mount the     #
 #        socket on which the Docker daemon listens to the           #
 #        container.                                                 #
 #                                                                   #
 #####################################################################
 
-# Starting with the base image of Alpine Linux version 3.11.3
-FROM alpine:3.12.0
-
-# Version number of `docker buildx`
-ARG buildxVersion=0.4.0
-
-# Version number of the Docker Engine
-ARG dockerVersion=19.03.12-r0
-
-# Setting working directory to '/'
+FROM alpine:3.15
 WORKDIR /
+ARG BUILDX_VERSION=0.7.0
+ARG DOCKER_VERSION=20.10.11-r0
+ARG GCR_CRED_VERSION=2.1.0
 
-# System call signal which will be sent to the container to exit
-STOPSIGNAL SIGTERM
-
-# Run as user 'root'
-USER root
-
-# Run the following commands
-    # Adding the 'Community' repository which contains the 'Docker' package
 RUN echo "http://dl-cdn.alpinelinux.org/alpine/latest-stable/community" >> /etc/apk/repositories \
-    # Updating package index
-    && apk update -U --no-cache \
-    # Installing Docker of version $dockerVersion
-    && apk add --no-cache docker=$dockerVersion \
-    # Setting environment variable for enabling experimental features in Docker
-    && export DOCKER_CLI_EXPERIMENTAL=1 \
-    # Downloading `buildx` binary release
-    && wget https://github.com/docker/buildx/releases/download/v${buildxVersion}/buildx-v${buildxVersion}.linux-amd64 \
-      -O /usr/bin/buildx \
-    # Setting execute permission on the `buildx` executable
+    && apk update -U --no-cache && apk add --no-cache curl openssh docker=$DOCKER_VERSION \
+    && curl -fSsLo /usr/bin/buildx https://github.com/docker/buildx/releases/download/v${BUILDX_VERSION}/buildx-v${BUILDX_VERSION}.linux-amd64 \
+    && curl -fSsL https://github.com/GoogleCloudPlatform/docker-credential-gcr/releases/download/v${GCR_CRED_VERSION}/docker-credential-gcr_linux_amd64-${GCR_CRED_VERSION}.tar.gz \
+    | tar xzp -C /usr/bin docker-credential-gcr \
+    && docker-credential-gcr configure-docker --registries asia-docker.pkg.dev,eu-docker.pkg.dev,us-docker.pkg.dev,gcr.io,asia.gcr.io,eu.gcr.io,us.gcr.io \
     && chmod a+x /usr/bin/buildx \
-    # Cleaning up
     && rm -rf /lib/apk/db/scripts.tar \
     && rm -r /var/cache/apk
 
-
-# Copying the 'entrypoint' script, which will help configure 'docker-buildx', to a directory
-# which is under $PATH
 COPY ./entrypoint.sh /usr/bin/
-
-# Run the 'entrypoint.sh' script
 ENTRYPOINT ["entrypoint.sh"]
+ENV DOCKER_BUILDKIT=1 DOCKER_CLI_EXPERIMENTAL=1
 
-# Maintainer information
-LABEL maintainer="Harsha Vardhan J" \
-      github.account="https://github.com/HarshaVardhanJ" \
-      dockerfile.github.page="https://github.com/HarshaVardhanJ/docker_files\
-/blob/master/docker-cloud-builder/Dockerfile" \
-      description="This Dockerfile creates an image of Docker with support for \
-`buildx` added. This way, images can be built for multiple architectures. The \
-suggested way to use this image is with GCP Cloud Build via a `cloudbuild.yaml` \
-file in which this image will need to be invoked as a Cloud Builder. The \
-arguments to the Cloud Builder will the same as the argument to the `docker buildx` \
-executable. Start the arguments with 'build -f [DOCKERFILE] [BUILD-CONTEXT]. \
-Check the sample `cloudbuild.yaml` file in this directory for an example of \
-how this image is to be used in a `cloudbuild.yaml` file." \
-      version="2.0"
+LABEL maintainer="Ryan Sinnet" \
+    github.account="https://github.com/rsinnet" \
+    dockerfile.github.page="https://github.com/rsinnet/docker-buildx/blob/main/Dockerfile" \
+    description="This Dockerfile creates an image of Docker with support for \
+    `buildx` added. This way, images can be built for multiple architectures. The \
+    suggested way to use this image is with GCP Cloud Build via a `cloudbuild.yaml` \
+    file in which this image will need to be invoked as a Cloud Builder. The \
+    arguments to the Cloud Builder will the same as the argument to the `docker buildx` \
+    executable. Start the arguments with 'build -f [DOCKERFILE] [BUILD-CONTEXT]. \
+    Check the sample `cloudbuild.yaml` file in this directory for an example of \
+    how this image is to be used in a `cloudbuild.yaml` file." \
+    version="2.0"
+
+STOPSIGNAL SIGTERM

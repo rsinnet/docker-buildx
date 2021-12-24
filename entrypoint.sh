@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 #
-#: Title        : entrypoint.sh 
+#: Title        : entrypoint.sh
 #: Date         :	13-Feb-2020
 #: Author       :	"Harsha Vardhan J" <vardhanharshaj@gmail.com>
 #: Version      : 0.2
@@ -62,7 +62,7 @@ checkBuilderExistence() {
   if [[ -n "${builderName}" ]] ; then
     printf '%s\n' "*****Selecting "${builderName}"*****"
     "${buildxCommand}" use --default multiarch-builder
-    
+
     # If the builder could not be selected and used
     if [[ $? -ne 0 ]] ; then
       printf '%s\n' "*****Could not use "${builderName}"*****"
@@ -96,11 +96,11 @@ main() {
     # Initialise the buildx builder and then pass all arguments
     # to the buildx command
     checkBuilderExistence \
-      && "${buildxCommand}" $@
+      && "${buildxCommand}" "$@"
   fi
 }
 
 # Calling the main function and passing all arguments to it
-main $@
+main "$@"
 
 # End of script
