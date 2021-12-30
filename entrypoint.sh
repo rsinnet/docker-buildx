@@ -25,9 +25,9 @@ buildxInitialise() {
   # Running the below command adds support for multi-arch
   # builds by setting up QEMU
   printf '%s\n' "*****Downloading binfmt:"${binfmtVersion}*****" image"
-  docker run --privileged harshavardhanj/binfmt:"${binfmtVersion}" || exit 1
+  docker run "--network=${hostNetwork}" --privileged harshavardhanj/binfmt:"${binfmtVersion}" || exit 1
   printf '%s\n' "*****Downloading qemu-user-static image*****"
-  docker run --rm --privileged multiarch/qemu-user-static --reset -p yes || exit 1
+  docker run "--network=${hostNetwork}" --rm --privileged multiarch/qemu-user-static --reset -p yes || exit 1
 
   # If the `buildx` executable is in PATH
   if [ -n "${buildxCommand}" ] ; then
@@ -42,7 +42,6 @@ buildxInitialise() {
     printf '%s\n' "*****The executable '${buildxCommand}' could not be found in the PATH.*****" \
       && exit 1
   fi
-
 }
 
 
