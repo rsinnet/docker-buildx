@@ -11,9 +11,6 @@
 #                 and run as the ENTRYPOINT command.
 ################
 
-hostNetwork=
-binfmtVersion=
-
 # Function which initialises `buildx`
 buildxInitialise() {
   # Variable that contains name of `buildx` executable in PATH

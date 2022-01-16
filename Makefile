@@ -1,7 +1,7 @@
 .DEFAULT_GOAL := help
 
 REPO ?= rsinnet/docker-buildx
-VERSION ?= latest
+VERSION ?= 2.0.1
 
 .PHONY: help
 help: ## Show usage information for this Makefile.
